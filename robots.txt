@@ -1,0 +1,3 @@
+User-agent: *
+Sitemap: https://tachib-k.github.io/anyverse-lp/sitemap.xml
+Sitemap: https://tachib-k.github.io/anyverse-lp/sitemap.txt
