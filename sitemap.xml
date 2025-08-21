@@ -4,11 +4,4 @@
     <loc>https://tachib-k.github.io/anyverse-lp/</loc>
     <lastmod>2025-08-21</lastmod>
   </url>
-  <!-- PDFも検索に出したい場合は↓のコメントを外して使う（任意） -->
-  <!--
-  <url>
-    <loc>https://tachib-k.github.io/anyverse-lp/bonus/bonus-v2.pdf</loc>
-    <lastmod>2025-08-21</lastmod>
-  </url>
-  -->
 </urlset>
