@@ -44,7 +44,6 @@
       先に詳しく知る →
       <a href="https://anys-world.fanbox.cc/?utm_source=lp&utm_medium=cta&utm_campaign=v0_2&utm_content=hero_fanbox"
          id="fanbox_link_hero"
-         data-analytics="fanbox_click"
          data-target="fanbox_top"
          target="_blank" rel="noopener">
         特典の詳細（FANBOX）
@@ -86,7 +85,7 @@
         </ul>
         <p><a href="#privacy">全文を読む</a></p>
       </details>
-      <p class="small">扉の先（FANBOX）：<a href="https://anys-world.fanbox.cc/?utm_source=lp&utm_medium=cta&utm_campaign=v0_2&utm_content=link_form_section" data-analytics="fanbox_click" data-target="fanbox_form_section" target="_blank" rel="noopener noreferrer">特設ページへ</a></p>
+      <p class="small">扉の先（FANBOX）：<a href="https://anys-world.fanbox.cc/?utm_source=lp&utm_medium=cta&utm_campaign=v0_2&utm_content=link_form_section" data-target="fanbox_form_section" target="_blank" rel="noopener noreferrer">特設ページへ</a></p>
     </section>
     <section id="privacy" aria-label="プライバシーポリシー">
       <h2>プライバシーポリシー</h2>
@@ -150,33 +149,24 @@
       const el = document.getElementById("contact");
       if (el){ el.textContent = u + "@" + d; el.onclick = ()=> location.href = "mailto:"+u+"@"+d; el.style.cursor = "pointer"; }
     })();
-  
-    // === GA4: LPイベント送信（段階CV） ===
+  </script>
+
+    <!-- === GA4: LPイベント送信（段階CV｜fanbox_clickはUI側の「イベント作成」で計測） === -->
+    <script>
     (function(){
-      const fire = (name, params) => { if (typeof window.gtag === "function") window.gtag('event', name, params || {}); };
+      var fire = function(name, params){ if (typeof window.gtag === "function") window.gtag('event', name, params || {}); };
 
       // CV2: ヒーローの「無料で受け取る（30秒）」クリック（フォームへスクロール）
-      const toFormEl = document.getElementById('toForm');
+      var toFormEl = document.getElementById('toForm');
       if (toFormEl) {
         toFormEl.addEventListener('click', function(){
           fire('signup_click', { place: 'hero' });
-        });
+        }, { once: false });
       }
-
-      // CV1: FANBOXリンク（ヒーロー直下／フォーム節）クリック
-      document.querySelectorAll('[data-analytics="fanbox_click"]').forEach(function(a){
-        a.addEventListener('click', function(){
-          const inHeader = !!a.closest('header');
-          const inForm = !!a.closest('#form');
-          fire('fanbox_click', {
-            place: inHeader ? 'hero' : (inForm ? 'form_section' : 'body'),
-            target: a.getAttribute('data-target') || 'unknown'
-          });
-        });
-      });
+      // 注意：FANBOX導線のクリックは GA4 管理画面の「イベントを作成」で
+      // click -> fanbox_click（link_url に anys-world.fanbox.cc を含む）としてキーイベント化します。
     })();
-    // === /GA4 ===
+    </script>
+    <!-- === /GA4 === -->
 
-</script>
-</body>
-</html>
+</body></html>
