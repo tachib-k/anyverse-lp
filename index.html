@@ -39,7 +39,18 @@
   <header>
     <h1>物語を“覗く”だけで、現実が少し動き出す。</h1>
     <p class="sub">『エニーの世界』の断片と章プレビューを、週1でお届け。初回特典つき。</p>
-    <a class="btn" href="#form" id="toForm">無料で受け取る</a>
+    <a class="btn" href="#form" id="toForm">無料で受け取る（30秒）</a>
+    <p class="subcta" style="margin-top:8px">
+      先に詳しく知る →
+      <a href="https://anys-world.fanbox.cc/?utm_source=lp&utm_medium=cta&utm_campaign=v0_2&utm_content=hero_fanbox"
+         id="fanbox_link_hero"
+         data-analytics="fanbox_click"
+         data-target="fanbox_top"
+         target="_blank" rel="noopener">
+        特典の詳細（FANBOX）
+      </a>
+    </p>
+
   </header>
 
   <main>
@@ -75,7 +86,7 @@
         </ul>
         <p><a href="#privacy">全文を読む</a></p>
       </details>
-      <p class="small">扉の先（FANBOX）：<a href="https://anys-world.fanbox.cc/?utm_source=lp&utm_medium=cta&utm_campaign=v0_2&utm_content=link_form_section" target="_blank" rel="noopener noreferrer">特設ページへ</a></p>
+      <p class="small">扉の先（FANBOX）：<a href="https://anys-world.fanbox.cc/?utm_source=lp&utm_medium=cta&utm_campaign=v0_2&utm_content=link_form_section" data-analytics="fanbox_click" data-target="fanbox_form_section" target="_blank" rel="noopener noreferrer">特設ページへ</a></p>
     </section>
     <section id="privacy" aria-label="プライバシーポリシー">
       <h2>プライバシーポリシー</h2>
@@ -139,6 +150,33 @@
       const el = document.getElementById("contact");
       if (el){ el.textContent = u + "@" + d; el.onclick = ()=> location.href = "mailto:"+u+"@"+d; el.style.cursor = "pointer"; }
     })();
-  </script>
+  
+    // === GA4: LPイベント送信（段階CV） ===
+    (function(){
+      const fire = (name, params) => { if (typeof window.gtag === "function") window.gtag('event', name, params || {}); };
+
+      // CV2: ヒーローの「無料で受け取る（30秒）」クリック（フォームへスクロール）
+      const toFormEl = document.getElementById('toForm');
+      if (toFormEl) {
+        toFormEl.addEventListener('click', function(){
+          fire('signup_click', { place: 'hero' });
+        });
+      }
+
+      // CV1: FANBOXリンク（ヒーロー直下／フォーム節）クリック
+      document.querySelectorAll('[data-analytics="fanbox_click"]').forEach(function(a){
+        a.addEventListener('click', function(){
+          const inHeader = !!a.closest('header');
+          const inForm = !!a.closest('#form');
+          fire('fanbox_click', {
+            place: inHeader ? 'hero' : (inForm ? 'form_section' : 'body'),
+            target: a.getAttribute('data-target') || 'unknown'
+          });
+        });
+      });
+    })();
+    // === /GA4 ===
+
+</script>
 </body>
 </html>
