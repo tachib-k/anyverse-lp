@@ -1,0 +1,14 @@
+<!doctype html><html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FANBOXへ移動中…</title>
+<meta name="referrer" content="no-referrer">
+<!-- 0秒でFANBOXへ。UTMはこのファイルのクエリをそのまま引き継ぐ -->
+<div>FANBOXへ移動中…開かない場合は<a id="jump" href="#">こちら</a></div>
+<script>
+  const params = location.search; // ?utm_source=lp&utm_medium=form_thanks... など
+  const dest = "https://anys-world.fanbox.cc/" + (params || "");
+  document.getElementById("jump").href = dest;
+  // 即時ジャンプ
+  location.replace(dest);
+</script>
