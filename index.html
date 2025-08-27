@@ -48,6 +48,18 @@
          target="_blank" rel="noopener">
         FANBOX（無料記事・活動メモ）
       </a>
+      <script>
+        const isDebug = new URLSearchParams(location.search).has('debug');
+        document.getElementById('fanbox-link').addEventListener('click', function(){
+          gtag('event','fanbox_click',{
+            link_url:this.href,
+            chapter:'42',
+            placement:'lp_button',
+            debug_mode:isDebug,
+            event_timeout:1500
+          });
+        });
+      </script>
     </p>
 
   </header>
