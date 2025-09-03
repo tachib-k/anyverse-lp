@@ -8,17 +8,18 @@
 <!-- GA4（測定IDに置換） -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NKGQG8KZ7D"></script>
 <script>
-  const qs  = location.search;                       // ?src=...&utm_...
-  const src = new URLSearchParams(qs).get('src') || 'unknown';
+  const qs = location.search;
+  const p  = new URLSearchParams(qs);
+  const src = p.get('src') || 'unknown';
   const dest = "https://anys-world.fanbox.cc/" + (qs || "");
   const payload = { src, ts: new Date().toISOString(), ua: navigator.userAgent };
-  const WEBHOOK = 'https://n8n-service-0xxy.onrender.com/webhook/any_go_click?key=singular'; // Production URL＋合言葉
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(WEBHOOK, new Blob([JSON.stringify(payload)], {type:'application/json'}));
-  } else {
-    fetch(WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify(payload), keepalive:true});
-  }
+
+  const WEBHOOK = 'https://n8n-service-0xxy.onrender.com/webhook/any_go_click'
+                + '?key=singular'
+                + '&src=' + encodeURIComponent(src)
+                + '&ts='  + encodeURIComponent(new Date().toISOString());
+
+  fetch(WEBHOOK, { method:'POST', mode:'no-cors', keepalive:true, body:'1' });
 
   document.getElementById('jump').href = dest;
 
