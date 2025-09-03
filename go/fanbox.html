@@ -11,6 +11,15 @@
   const qs  = location.search;                       // ?src=...&utm_...
   const src = new URLSearchParams(qs).get('src') || 'unknown';
   const dest = "https://anys-world.fanbox.cc/" + (qs || "");
+  const payload = { src, ts: new Date().toISOString(), ua: navigator.userAgent };
+  const WEBHOOK = 'https://n8n-service-0xxy.onrender.com/webhook/any_go_click?key=singular'; // Production URL＋合言葉
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(WEBHOOK, new Blob([JSON.stringify(payload)], {type:'application/json'}));
+  } else {
+    fetch(WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify(payload), keepalive:true});
+  }
+
   document.getElementById('jump').href = dest;
 
   // GA 初期化
@@ -23,7 +32,7 @@
   gtag('event','outbound_fanbox', { event_label: src, value: 1 });
 
   // 送信の猶予 → 転送（体感ほぼ無）
-  setTimeout(()=>{ location.replace(dest); }, 300); // 200–300msでもOK
+  setTimeout(()=>{ location.replace(dest); }, 300); // 200msでは出ず
 </script>
 
 <noscript><meta http-equiv="refresh" content="0; url=https://anys-world.fanbox.cc/"></noscript>
