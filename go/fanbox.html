@@ -3,12 +3,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FANBOXへ移動中…</title>
 <meta name="referrer" content="no-referrer">
-<!-- 0秒でFANBOXへ。UTMはこのファイルのクエリをそのまま引き継ぐ -->
-<div>FANBOXへ移動中…開かない場合は<a id="jump" href="#">こちら</a></div>
+<p>FANBOXへ移動中… 開かない場合は <a id="jump" href="#">こちら</a></p>
+
+<!-- GA4（測定IDに置換） -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NKGQG8KZ7D"></script>
 <script>
-  const params = location.search; // ?utm_source=lp&utm_medium=form_thanks... など
-  const dest = "https://anys-world.fanbox.cc/" + (params || "");
-  document.getElementById("jump").href = dest;
-  // 即時ジャンプ
-  location.replace(dest);
+  const qs  = location.search;                       // ?src=...&utm_...
+  const src = new URLSearchParams(qs).get('src') || 'unknown';
+  const dest = "https://anys-world.fanbox.cc/" + (qs || "");
+  document.getElementById('jump').href = dest;
+
+  // GA 初期化
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-NKGQG8KZ7D', { transport_type: 'beacon' });
+
+  // カスタムイベント（クリックの証跡）
+  gtag('event','outbound_fanbox', { event_label: src, value: 1 });
+
+  // 送信の猶予 → 転送（体感ほぼ無）
+  setTimeout(()=>{ location.replace(dest); }, 200); // 200–300msでもOK
 </script>
+
+<noscript><meta http-equiv="refresh" content="0; url=https://anys-world.fanbox.cc/"></noscript>
+</html>
