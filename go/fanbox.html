@@ -11,7 +11,7 @@
   (function(){
   const qs  = new URLSearchParams(location.search);
   const src = qs.get('src') || 'unknown';
-  const dest = "https://anys-world.fanbox.cc/" + (qs || "");
+  const dest = "https://anys-world.fanbox.cc/";
   const ref = document.referrer || '';
   const ua  = navigator.userAgent || '';
   const base = `src=${encodeURIComponent(src)}&ref=${encodeURIComponent(ref)}&ua=${encodeURIComponent(ua)}&ts=${Date.now()}`;
