@@ -8,22 +8,24 @@
 <!-- GA4（測定IDに置換） -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NKGQG8KZ7D"></script>
 <script>
-  const qs = location.search;
-  const p  = new URLSearchParams(qs);
-  const src = p.get('src') || 'unknown';
+  (function(){
+  const qs  = new URLSearchParams(location.search);
+  const src = qs.get('src') || 'unknown';
   const dest = "https://anys-world.fanbox.cc/" + (qs || "");
-  const payload = { src, ts: new Date().toISOString(), ua: navigator.userAgent };
+  const ref = document.referrer || '';
+  const ua  = navigator.userAgent || '';
+  const base = `src=${encodeURIComponent(src)}&ref=${encodeURIComponent(ref)}&ua=${encodeURIComponent(ua)}&ts=${Date.now()}`;
 
-  const WEBHOOK = 'https://n8n-service-0xxy.onrender.com/webhook/any_go_click'
-                + '?key=singular'
-                + '&src=' + encodeURIComponent(src)
-                + '&ts='  + encodeURIComponent(new Date().toISOString());
+  function ping(u){
+    const url = u + (u.includes('?')?'&':'?') + base;
+    // fetch（失敗しても無視）
+    fetch(url, {mode:'no-cors'}).catch(()=>{});
+    // 1×1ピクセルで保険送信
+    const img = new Image(1,1); img.src = url + '&via=img';
+  }
+  ping('https://n8n-service-0xxy.onrender.com/webhook/any_go_click?key=singular'); // 生きていれば記録
+  ping('https://script.google.com/macros/s/AKfycbxj_1HAL7VhHOmBv-bZMK6UDLMbFvtHwZeocouzmHdLCGsgRX20-mGNZRD7sLI3acB_mg/exec');           // フォールバック記録
 
-  fetch(WEBHOOK, { method:'POST', mode:'no-cors', keepalive:true, body:'1' });
-
-  // GAS直送（確実に1件残す）
-  fetch('https://script.google.com/macros/s/AKfycbwcnepwk-bUFwWNwcE3liCDx4NxNMvDRypDOhSsmlxPmPMnvy0lQNe1WbbUjBYYafMNuw/exec?' + qs).catch(()=>{});
-  
   document.getElementById('jump').href = dest;
 
   // GA 初期化
@@ -37,6 +39,7 @@
 
   // 送信の猶予 → 転送（体感ほぼ無）
   setTimeout(()=>{ location.replace(dest); }, 300); // 200msでは出ず
+})();
 </script>
 
 <noscript><meta http-equiv="refresh" content="0; url=https://anys-world.fanbox.cc/"></noscript>
