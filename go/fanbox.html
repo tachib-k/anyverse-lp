@@ -14,21 +14,17 @@
   const ref=document.referrer||'';
   const ua =navigator.userAgent||'';
   const rid=(crypto.randomUUID&&crypto.randomUUID())||(Date.now()+'_'+Math.random());
-  const payload=new URLSearchParams({src,ref,ua,ts:String(Date.now()),rid}); // 共通
+  const base=new URLSearchParams({src,ref,ua,ts:String(Date.now()),rid});
 
-  const N8N='https://n8n-service-0xxy.onrender.com/webhook/any_go_click'; // ←?key削除
+  const N8N='https://n8n-service-0xxy.onrender.com/webhook/any_go_click';
   const GAS='https://script.google.com/macros/s/AKfycbxj_1HAL7VhHOmBv-bZMK6UDLMbFvtHwZeocouzmHdLCGsgRX20-mGNZRD7sLI3acB_mg/exec';
 
-  // 1) n8nへ POST（via=n8n）
-  const p1=new URLSearchParams(payload); p1.append('via','n8n');
+  const p1=new URLSearchParams(base); p1.append('via','n8n');
   let ok=false; try{ ok=navigator.sendBeacon&&navigator.sendBeacon(N8N,p1);}catch(e){}
   if(!ok){ fetch(N8N,{method:'POST',body:p1,keepalive:true,mode:'no-cors'}).catch(()=>{}); }
 
-  // 2) GASへ GET（via=go）→ 2行目
-  setTimeout(()=>{ const q=payload.toString()+'&via=go';
-                   fetch(GAS+'?'+q,{mode:'no-cors'}).catch(()=>{}); },50);
+  setTimeout(()=>{ fetch(GAS+'?'+base.toString()+'&via=go',{mode:'no-cors'}).catch(()=>{}); },50);
 
-  // 転送
   document.getElementById('jump').href='https://anys-world.fanbox.cc/';
   setTimeout(()=>{ location.replace('https://anys-world.fanbox.cc/'); },300);
 })();
