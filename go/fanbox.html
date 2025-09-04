@@ -21,7 +21,7 @@
     // fetch（失敗しても無視）
     fetch(url, {mode:'no-cors'}).catch(()=>{});
     // 1×1ピクセルで保険送信
-    const img = new Image(1,1); img.src = url + '&via=img';
+    // const img = new Image(1,1); img.src = url + '&via=img';
   }
   ping('https://n8n-service-0xxy.onrender.com/webhook/any_go_click?key=singular'); // 生きていれば記録
   ping('https://script.google.com/macros/s/AKfycbxj_1HAL7VhHOmBv-bZMK6UDLMbFvtHwZeocouzmHdLCGsgRX20-mGNZRD7sLI3acB_mg/exec');           // フォールバック記録
