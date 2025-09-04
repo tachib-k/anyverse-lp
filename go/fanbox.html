@@ -17,7 +17,7 @@
   const base=new URLSearchParams({src,ref,ua,ts:String(Date.now()),rid});
 
   const N8N='https://n8n-service-0xxy.onrender.com/webhook/any_go_click';
-  const GAS='https://script.google.com/macros/s/AKfycbxj_1HAL7VhHOmBv-bZMK6UDLMbFvtHwZeocouzmHdLCGsgRX20-mGNZRD7sLI3acB_mg/exec';
+  const GAS='https://script.google.com/macros/s/AKfycbysBX4laWuzgGCnrcYp1kovXA99s2gaIsk_XUtq4iBPQ_NgChPlrwJ0-_HlOqnhhIyouA/exec';
 
   const p1=new URLSearchParams(base); p1.append('via','n8n');
   let ok=false; try{ ok=navigator.sendBeacon&&navigator.sendBeacon(N8N,p1);}catch(e){}
