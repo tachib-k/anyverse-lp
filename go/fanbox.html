@@ -8,37 +8,29 @@
 <!-- GA4（測定IDに置換） -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NKGQG8KZ7D"></script>
 <script>
-  (function(){
-  const qs  = new URLSearchParams(location.search);
-  const src = qs.get('src') || 'unknown';
-  const dest = "https://anys-world.fanbox.cc/";
-  const ref = document.referrer || '';
-  const ua  = navigator.userAgent || '';
-  const base = `src=${encodeURIComponent(src)}&ref=${encodeURIComponent(ref)}&ua=${encodeURIComponent(ua)}&ts=${Date.now()}`;
+(function(){
+  const qs=new URLSearchParams(location.search);
+  const src=qs.get('src')||'unknown';
+  const ref=document.referrer||'';
+  const ua =navigator.userAgent||'';
+  const rid=(crypto.randomUUID&&crypto.randomUUID())||(Date.now()+'_'+Math.random());
+  const payload=new URLSearchParams({src,ref,ua,ts:String(Date.now()),rid}); // 共通
 
-  function ping(u){
-    const url = u + (u.includes('?')?'&':'?') + base;
-    // fetch（失敗しても無視）
-    fetch(url, {mode:'no-cors'}).catch(()=>{});
-    // 1×1ピクセルで保険送信
-    // const img = new Image(1,1); img.src = url + '&via=img';
-  }
-  ping('https://n8n-service-0xxy.onrender.com/webhook/any_go_click?key=singular'); // 生きていれば記録
-  ping('https://script.google.com/macros/s/AKfycbxj_1HAL7VhHOmBv-bZMK6UDLMbFvtHwZeocouzmHdLCGsgRX20-mGNZRD7sLI3acB_mg/exec');           // フォールバック記録
+  const N8N='https://n8n-service-0xxy.onrender.com/webhook/any_go_click'; // ←?key削除
+  const GAS='https://script.google.com/macros/s/AKfycbxj_1HAL7VhHOmBv-bZMK6UDLMbFvtHwZeocouzmHdLCGsgRX20-mGNZRD7sLI3acB_mg/exec';
 
-  document.getElementById('jump').href = dest;
+  // 1) n8nへ POST（via=n8n）
+  const p1=new URLSearchParams(payload); p1.append('via','n8n');
+  let ok=false; try{ ok=navigator.sendBeacon&&navigator.sendBeacon(N8N,p1);}catch(e){}
+  if(!ok){ fetch(N8N,{method:'POST',body:p1,keepalive:true,mode:'no-cors'}).catch(()=>{}); }
 
-  // GA 初期化
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-NKGQG8KZ7D', { transport_type: 'beacon' });
+  // 2) GASへ GET（via=go）→ 2行目
+  setTimeout(()=>{ const q=payload.toString()+'&via=go';
+                   fetch(GAS+'?'+q,{mode:'no-cors'}).catch(()=>{}); },50);
 
-  // カスタムイベント（クリックの証跡）
-  gtag('event','outbound_fanbox', { event_label: src, value: 1 });
-
-  // 送信の猶予 → 転送（体感ほぼ無）
-  setTimeout(()=>{ location.replace(dest); }, 300); // 200msでは出ず
+  // 転送
+  document.getElementById('jump').href='https://anys-world.fanbox.cc/';
+  setTimeout(()=>{ location.replace('https://anys-world.fanbox.cc/'); },300);
 })();
 </script>
 
