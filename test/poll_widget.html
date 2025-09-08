@@ -57,7 +57,7 @@
   </main>
   <script>
     // === 設定 ===
-    const API_BASE = 'https://script.google.com/macros/s/AKfycbxknYCHsnTTjV8eMtvahNf4QVwujuqbgzXRHyxyKkmSYZE3Y0df3P4NHZe10NwTBq2q/exec'; // ←GAS WebアプリURL（末尾/exec）
+    const API_BASE = 'PUT_YOUR_WEB_APP_URL_HERE'; // ←GAS WebアプリURL（必ず /exec）
     const QUESTION_TEXT = 'プロジェクト・エニーを即時停止すべき？';
     const LABEL_YES = 'YES（停止すべき）';
     const LABEL_NO  = 'NO（停止すべきではない）';
@@ -107,25 +107,15 @@
       setDisabled(true);
       document.getElementById('msg').textContent = '送信中…';
       try{
-        const r = await fetch(API_BASE, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            choice,
-            token: token(),
-            src: src(),
-            ua: navigator.userAgent
-          })
-        });
-        const j = await r.json();
-        if(j.ok){
-          renderCounts(j.counts || {});
-          document.getElementById('msg').textContent = j.duplicate ?
-            'この端末では直近24時間に投票済みです（集計は更新済み）。' :
-            '投票を受け付けました。ありがとうございました。';
-        } else {
-          document.getElementById('msg').textContent = 'エラー：' + (j.error || 'unknown');
-        }
+        // CORSプリフライト回避のため、URLエンコード形式で送信（カスタムヘッダ無し）
+        const body = new URLSearchParams();
+        body.append('choice', choice);
+        body.append('token', token());
+        body.append('src', src());
+        body.append('ua', navigator.userAgent);
+        await fetch(API_BASE, { method: 'POST', body });
+        await fetchCounts(); // 直後にGETで反映
+        document.getElementById('msg').textContent = '投票完了。ありがとうございます。';
       } catch(e){
         document.getElementById('msg').textContent = '送信失敗：' + e;
       } finally {
