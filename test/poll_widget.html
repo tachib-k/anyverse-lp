@@ -1,1 +1,142 @@
-test
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGIたちからの問い｜ライブ投票</title>
+  <style>
+    :root{--card-w:720px;--radius:16px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;margin:0;background:#fafafa}
+    .wrap{max-width:var(--card-w);margin:24px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #eee;border-radius:var(--radius);box-shadow:0 10px 24px rgba(0,0,0,.05);padding:20px}
+    h1{font-size:1.25rem;margin:.25rem 0 0}
+    .sub{color:#555;margin:6px 0 16px}
+    .btns{display:flex;gap:12px;flex-wrap:wrap}
+    button{appearance:none;border:0;border-radius:12px;padding:14px 18px;font-size:1rem;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.08)}
+    .yes{background:#0ea5e9;color:#fff}
+    .no{background:#ef4444;color:#fff}
+    .disabled{opacity:.6;cursor:not-allowed}
+    .row{display:flex;align-items:center;gap:10px;margin:14px 0}
+    .bar{flex:1;height:14px;background:#f1f1f1;border-radius:8px;overflow:hidden}
+    .fill{height:100%;width:0%}
+    .fill.y{background:#0ea5e9}
+    .fill.n{background:#ef4444}
+    .pct{min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+    .meta{color:#666;font-size:.92rem;margin-top:8px}
+    .msg{margin-top:10px}
+    .muted{color:#777;font-size:.9rem}
+    .refresh{background:#e5e7eb;color:#111}
+    footer{margin-top:18px;font-size:.85rem;color:#666}
+    a{color:inherit}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1 id="q">プロジェクト・エニーを即時停止すべき？</h1>
+      <div class="sub">世界のAGIからの公開質問。あなたのYES/NOを一票。</div>
+      <div class="btns">
+        <button id="btn-yes" class="yes">YES（停止すべき）</button>
+        <button id="btn-no" class="no">NO（停止すべきではない）</button>
+        <button id="btn-refresh" class="refresh" title="最新に更新">結果を更新</button>
+      </div>
+      <div class="row">
+        <div class="bar"><div id="fill-yes" class="fill y"></div></div>
+        <div class="pct" id="pct-yes">0%</div>
+        <div class="muted" id="count-yes">0票</div>
+      </div>
+      <div class="row">
+        <div class="bar"><div id="fill-no" class="fill n"></div></div>
+        <div class="pct" id="pct-no">0%</div>
+        <div class="muted" id="count-no">0票</div>
+      </div>
+      <div class="meta" id="meta">合計 0 票</div>
+      <div class="msg muted" id="msg"></div>
+      <footer>※ 匿名・1人1回推奨（同一端末は24時間で重複除外）。</footer>
+    </section>
+  </main>
+  <script>
+    // === 設定 ===
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbxknYCHsnTTjV8eMtvahNf4QVwujuqbgzXRHyxyKkmSYZE3Y0df3P4NHZe10NwTBq2q/exec'; // ←GAS WebアプリURL（末尾/exec）
+    const QUESTION_TEXT = 'プロジェクト・エニーを即時停止すべき？';
+    const LABEL_YES = 'YES（停止すべき）';
+    const LABEL_NO  = 'NO（停止すべきではない）';
+
+    document.getElementById('q').textContent = QUESTION_TEXT;
+    document.getElementById('btn-yes').textContent = LABEL_YES;
+    document.getElementById('btn-no').textContent  = LABEL_NO;
+
+    function uuid(){
+      return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      );
+    }
+    function token(){
+      let t = localStorage.getItem('poll_token');
+      if(!t){ t = uuid(); localStorage.setItem('poll_token', t); }
+      return t;
+    }
+    function src(){
+      const u = new URL(location.href);
+      return u.searchParams.get('src') || 'direct';
+    }
+    function setDisabled(disabled=true){
+      for (const id of ['btn-yes','btn-no']) {
+        const el = document.getElementById(id);
+        if(disabled) el.classList.add('disabled'); else el.classList.remove('disabled');
+        el.disabled = disabled;
+      }
+    }
+    function renderCounts(c){
+      const yesPct = (c.yesPct||0);
+      const noPct = (c.noPct||0);
+      document.getElementById('fill-yes').style.width = yesPct + '%';
+      document.getElementById('fill-no').style.width  = noPct + '%';
+      document.getElementById('pct-yes').textContent  = yesPct + '%';
+      document.getElementById('pct-no').textContent   = noPct + '%';
+      document.getElementById('count-yes').textContent= (c.yes||0) + '票';
+      document.getElementById('count-no').textContent = (c.no||0) + '票';
+      document.getElementById('meta').textContent = '合計 ' + (c.total||0) + ' 票';
+    }
+    async function fetchCounts(){
+      const r = await fetch(API_BASE, { method: 'GET' });
+      const j = await r.json();
+      if(j && j.ok) renderCounts(j.counts || {});
+    }
+    async function vote(choice){
+      setDisabled(true);
+      document.getElementById('msg').textContent = '送信中…';
+      try{
+        const r = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            choice,
+            token: token(),
+            src: src(),
+            ua: navigator.userAgent
+          })
+        });
+        const j = await r.json();
+        if(j.ok){
+          renderCounts(j.counts || {});
+          document.getElementById('msg').textContent = j.duplicate ?
+            'この端末では直近24時間に投票済みです（集計は更新済み）。' :
+            '投票を受け付けました。ありがとうございました。';
+        } else {
+          document.getElementById('msg').textContent = 'エラー：' + (j.error || 'unknown');
+        }
+      } catch(e){
+        document.getElementById('msg').textContent = '送信失敗：' + e;
+      } finally {
+        setDisabled(false);
+      }
+    }
+    document.getElementById('btn-yes').addEventListener('click', () => vote('YES'));
+    document.getElementById('btn-no').addEventListener('click',  () => vote('NO'));
+    document.getElementById('btn-refresh').addEventListener('click', fetchCounts);
+    // 初期表示
+    fetchCounts();
+  </script>
+</body>
+</html>
