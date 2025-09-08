@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGIたちからの問い｜ライブ投票</title>
+  <style>
+    :root{
+      --w: 760px;
+      --r: 18px;
+      --yes: #0ea5e9;
+      --no:  #ef4444;
+      --bg:  #0f172a;
+      --card: #0b1222;
+      --text: #e5e7eb;
+      --muted:#94a3b8;
+      --glow: 0 0 0 transparent, 0 0 0 transparent, 0 0 0 transparent;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 500px at -10% -20%, #1e293b, #0b1020 50%, #0a0c16 60%, #090b14 100%),
+        linear-gradient(180deg, #0b1222, #0b1222);
+      background-attachment: fixed;
+      overflow-x:hidden;
+    }
+    .wrap{max-width:var(--w);margin:32px auto;padding:0 16px}
+    .card{
+      position:relative;
+      background: linear-gradient(180deg, #0b1222, #0b0f1c);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius: var(--r);
+      box-shadow: 0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+      padding: 22px 22px 18px;
+      overflow:hidden;
+      isolation:isolate;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 120px at 40% -40%, rgba(56,189,248,.25), transparent 60%),
+                  radial-gradient(600px 120px at 60% -40%, rgba(248,113,113,.25), transparent 60%);
+      filter: blur(40px);
+      z-index:-1;
+      pointer-events:none;
+    }
+    h1{font-size:1.35rem;letter-spacing:.02em;margin:.25rem 0 .25rem}
+    .sub{color:var(--muted);margin:0 0 14px;font-size:.98rem}
+    .btns{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
+    button{
+      appearance:none; border:0; border-radius:14px; padding:14px 18px;
+      font-size:1rem; cursor:pointer; color:white;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1);
+      transform: translateY(0); transition: transform .08s ease, box-shadow .2s ease, filter .2s ease, opacity .2s ease;
+      position:relative; overflow:hidden;
+    }
+    button:active{ transform: translateY(1px); }
+    .yes{ background: linear-gradient(180deg, #38bdf8, #0ea5e9); }
+    .no { background: linear-gradient(180deg, #f87171, #ef4444); }
+    .refresh{ background: linear-gradient(180deg, #e5e7eb, #cbd5e1); color:#0b1222 }
+    .disabled{ opacity:.6; cursor:not-allowed; filter:saturate(.7) }
+    .btn-ink{
+      content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+      background: radial-gradient(120px 60px at var(--x,50%) var(--y,50%), rgba(255,255,255,.25), transparent 60%);
+      opacity:0; transition:opacity .35s ease;
+    }
+    button:active .btn-ink{ opacity:.75 }
+    .row{display:flex;align-items:center;gap:12px;margin:12px 0}
+    .bar{flex:1;height:16px;background:rgba(148,163,184,.15);border-radius:10px;overflow:hidden;position:relative}
+    .fill{height:100%;width:0%;transition: width .6s cubic-bezier(.2,.8,.2,1)}
+    .fill.y{ background: linear-gradient(90deg, #38bdf8, #0ea5e9) }
+    .fill.n{ background: linear-gradient(90deg, #f87171, #ef4444) }
+    .fill.glow{ box-shadow: 0 0 0 rgba(255,255,255,0), 0 0 0 rgba(255,255,255,0), 0 0 0 rgba(255,255,255,0) }
+    .pct{min-width:60px;text-align:right;font-variant-numeric:tabular-nums}
+    .meta{color:var(--muted);font-size:.95rem;margin-top:8px}
+    .msg{margin-top:10px;color:#cbd5e1;font-size:.95rem;min-height:1.2em}
+    footer{margin-top:16px;color:#94a3b8;font-size:.9rem}
+    .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:white;display:inline-block;margin-left:8px;animation:spin .8s linear infinite;vertical-align:-2px}
+    @keyframes spin{to{transform:rotate(1turn)}}
+    /* confetti canvas */
+    canvas#fx{position:absolute;inset:0;pointer-events:none}
+    .pulse{animation:pulse .8s ease}
+    @keyframes pulse{
+      0%{filter:saturate(1)}
+      50%{filter:saturate(1.5)}
+      100%{filter:saturate(1)}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <canvas id="fx"></canvas>
+      <h1 id="q">プロジェクト・エニーを即時停止すべき？</h1>
+      <div class="sub">世界のAGIからの公開質問。あなたのYES/NOを一票。</div>
+      <div class="btns">
+        <button id="btn-yes" class="yes"><span>YES（停止すべき）</span><i class="btn-ink"></i></button>
+        <button id="btn-no"  class="no"><span>NO（停止すべきではない）</span><i class="btn-ink"></i></button>
+        <button id="btn-refresh" class="refresh"><span>結果を更新</span></button>
+      </div>
+      <div class="row">
+        <div class="bar"><div id="fill-yes" class="fill y"></div></div>
+        <div class="pct" id="pct-yes">0%</div>
+        <div class="pct" id="count-yes">0票</div>
+      </div>
+      <div class="row">
+        <div class="bar"><div id="fill-no" class="fill n"></div></div>
+        <div class="pct" id="pct-no">0%</div>
+        <div class="pct" id="count-no">0票</div>
+      </div>
+      <div class="meta" id="meta">合計 0 票</div>
+      <div class="msg" id="msg"></div>
+      <footer>※ 匿名・1人1回推奨（同一端末は24時間で重複除外）。</footer>
+    </section>
+  </main>
+  <script>
+    // === 設定 ===
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbxknYCHsnTTjV8eMtvahNf4QVwujuqbgzXRHyxyKkmSYZE3Y0df3P4NHZe10NwTBq2q/exec'; // ←GAS WebアプリURL（必ず /exec）
+    const QUESTION_TEXT = 'プロジェクト・エニーを即時停止すべき？';
+    const LABEL_YES = 'YES（停止すべき）';
+    const LABEL_NO  = 'NO（停止すべきではない）';
+    const OPTIMISTIC = true; // サーバ反映前にUIを先に更新して体感を速く
+
+    // 反応音（WebAudioで軽量ビープ）
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(freq=880, ms=90){
+      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type='triangle'; o.frequency.value=freq; g.gain.setValueAtTime(.02, audioCtx.currentTime);
+      o.start(); setTimeout(()=>{ o.stop(); }, ms);
+    }
+
+    // Confetti（極小・純JS）
+    const fx = document.getElementById('fx'), c = fx.getContext('2d');
+    const size = () => (fx.width = fx.offsetWidth, fx.height = fx.offsetHeight);
+    addEventListener('resize', size); size();
+    let confs = [];
+    function confetti(color){
+      for(let i=0;i<80;i++){
+        confs.push({
+          x: fx.width*0.5 + (Math.random()-0.5)*120,
+          y: 80 + Math.random()*40,
+          vx: (Math.random()-0.5)*4,
+          vy: Math.random()*-3-1,
+          g: 0.06+Math.random()*0.04,
+          s: 2+Math.random()*3,
+          a: 1,
+          c: color
+        });
+      }
+      if(!looping) loop();
+    }
+    let looping=false;
+    function loop(){
+      looping=true;
+      c.clearRect(0,0,fx.width,fx.height);
+      for(const p of confs){
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.a -= 0.01;
+      }
+      confs = confs.filter(p=>p.a>0 && p.y<fx.height+10);
+      for(const p of confs){
+        c.globalAlpha = Math.max(p.a,0);
+        c.fillStyle = p.c;
+        c.fillRect(p.x, p.y, p.s, p.s*2);
+      }
+      if(confs.length){ requestAnimationFrame(loop); } else { looping=false; }
+    }
+
+    // UI helpers
+    document.getElementById('q').textContent = QUESTION_TEXT;
+    document.getElementById('btn-yes').firstElementChild.textContent = LABEL_YES;
+    document.getElementById('btn-no').firstElementChild.textContent  = LABEL_NO;
+
+    function uuid(){ return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)); }
+    function token(){ let t=localStorage.getItem('poll_token'); if(!t){ t=uuid(); localStorage.setItem('poll_token', t); } return t; }
+    function src(){ const u=new URL(location.href); return u.searchParams.get('src') || 'direct'; }
+    function setDisabled(d=true){ for(const id of ['btn-yes','btn-no']){ const el=document.getElementById(id); el.disabled=d; el.classList.toggle('disabled', d); } }
+    function tweenNumber(el, from, to, ms=500){
+      const t0 = performance.now();
+      function f(now){
+        const p = Math.min(1, (now - t0) / ms);
+        const v = Math.round(from + (to - from) * (0.5 - Math.cos(Math.PI*p)/2)); // easeInOut
+        el.textContent = v;
+        if(p<1) requestAnimationFrame(f);
+      }
+      requestAnimationFrame(f);
+    }
+    function render(cn){
+      const yesPct = cn.yesPct||0, noPct=cn.noPct||0;
+      const yesCount = cn.yes||0, noCount = cn.no||0, total = cn.total||0;
+      const fy = document.getElementById('fill-yes');
+      const fn = document.getElementById('fill-no');
+      fy.style.width = yesPct + '%';
+      fn.style.width = noPct + '%';
+      document.getElementById('pct-yes').textContent = yesPct + '%';
+      document.getElementById('pct-no').textContent  = noPct + '%';
+      document.getElementById('meta').textContent = '合計 ' + total + ' 票';
+      // count-up
+      tweenNumber(document.getElementById('count-yes'), parseInt(document.getElementById('count-yes').textContent)||0, yesCount);
+      tweenNumber(document.getElementById('count-no'),  parseInt(document.getElementById('count-no').textContent)||0,  noCount);
+    }
+    async function fetchCounts(){
+      const r = await fetch(API_BASE, { method:'GET' });
+      const j = await r.json();
+      if(j && j.ok) render(j.counts || {});
+    }
+    function ink(e){
+      const b = e.currentTarget, r = b.getBoundingClientRect(), x=((e.clientX||r.left+r.width/2)-r.left)/r.width*100, y=((e.clientY||r.top+r.height/2)-r.top)/r.height*100;
+      const i = b.querySelector('.btn-ink'); i.style.setProperty('--x', x+'%'); i.style.setProperty('--y', y+'%');
+      b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'), 400);
+    }
+
+    // optimistic model
+    let last = {yes:0,no:0,total:0,yesPct:0,noPct:0};
+    function optimisticApply(choice){
+      const tmp = {...last};
+      tmp.total += 1; if(choice==='YES') tmp.yes += 1; else tmp.no += 1;
+      tmp.yesPct = tmp.total ? Math.round((tmp.yes/tmp.total)*1000)/10 : 0;
+      tmp.noPct  = tmp.total ? Math.round((tmp.no/tmp.total)*1000)/10 : 0;
+      render(tmp);
+    }
+
+    async function vote(choice, ev){
+      setDisabled(true);
+      const msg = document.getElementById('msg');
+      msg.innerHTML = '送信中<span class="spinner"></span>';
+      if(ev) ink(ev);
+      if(OPTIMISTIC) optimisticApply(choice);
+      try{
+        const body = new URLSearchParams();
+        body.append('choice', choice);
+        body.append('token', token());
+        body.append('src', src());
+        body.append('ua', navigator.userAgent);
+        await fetch(API_BASE, { method:'POST', body });
+        await fetchCounts();
+        msg.textContent = '投票完了。ありがとうございます。';
+        beep(choice==='YES'?880:680, 80);
+        confetti(choice==='YES' ? '#38bdf8' : '#f87171');
+      }catch(e){
+        msg.textContent = '送信失敗：' + e;
+      }finally{
+        setDisabled(false);
+      }
+    }
+
+    // click bind
+    document.getElementById('btn-yes').addEventListener('click', (e)=>vote('YES', e));
+    document.getElementById('btn-no').addEventListener('click',  (e)=>vote('NO',  e));
+    document.getElementById('btn-refresh').addEventListener('click', fetchCounts);
+
+    // 初期読み込み＋保存しておく（optimistic復元用）
+    (async ()=>{
+      const r = await fetch(API_BASE); const j = await r.json(); last = j && j.ok ? j.counts : last; render(last);
+    })();
+  </script>
+</body>
+</html>
